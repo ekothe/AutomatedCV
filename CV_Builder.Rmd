@@ -1,0 +1,107 @@
+---
+title: "This CV was automagically generated"
+csl: apa-cv.csl
+graphics: yes
+output:
+  html_document: default
+  pdf_document:
+    latex_engine: lualatex
+  word_document:
+    reference_docx: CV_Template.docx
+nocite: |
+  @*
+header-includes: \usepackage{textcomp}
+bibliography: yourGS.bib
+---
+
+```{r setup, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+library(scholar)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(RefManageR)
+library(rorcid)
+
+your.id<-"_gtcMr8AAAAJ"
+your.orcid<-"0000-0003-1145-6057"
+
+```
+
+```{r JournalRank, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+JournalRank<-read.csv("JournalRank.csv", skip=1, stringsAsFactors = FALSE)
+JournalRank<-data.frame(lapply(JournalRank, function(v) {
+  if (is.character(v)) return(toupper(v))
+   else return(v)
+   }))
+
+JournalRank<-JournalRank %>% distinct(Full.Journal.Title, Journal.Impact.Factor, .keep_all = TRUE)
+
+JournalRank$journal.upper<-JournalRank$Full.Journal.Title
+```
+
+
+```{r BibBuilder, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+your.GS<-ReadBib("yourGS.bib")
+
+your.GS.frame<-as.data.frame(your.GS)     # Convert to dataframe
+your.GS.frame$journal.upper<-toupper(your.GS.frame$journal)
+your.GS.frame$institution.upper<-toupper(your.GS.frame$institution)
+
+your.GS.frame$journal.upper <- ifelse(your.GS.frame$journal.upper == "", your.GS.frame$institution.upper, your.GS.frame$journal.upper)
+
+your.GS.frame<-left_join(your.GS.frame, JournalRank, by="journal.upper")
+
+your.GS.frame$note<-paste("Number of Citations: ",your.GS.frame$cites, "Impact Factor: ", your.GS.frame$Journal.Impact.Factor) # Move citation counts and IF to note field
+
+your.GS.frame.reduced<-subset(your.GS.frame, select=-c(journal.upper, Rank, Full.Journal.Title, Total.Cites, Journal.Impact.Factor, Eigenfactor.Score, institution.upper))
+
+your.GS<-as.BibEntry(your.GS.frame.reduced)
+
+# This is commented out because using the automatically generated .bib throws an encoding error. Opening yourGS.bib and saving it works for subsequent runs. 
+#WriteBib(your.GS, "yourGS.bib", check.entries = FALSE, biblatex = TRUE, .Encoding = "UTF-8")
+
+```
+
+```{r profile, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+
+# Google Scholar profile
+profile<-get_profile(your.id)
+pubs<-get_publications(your.id, cstart = 0, pagesize = 100, flush = FALSE)
+
+# ORCID profile
+your.profile<-orcid_id(orcid=your.orcid, profile="profile") 
+bio<-eval(parse(text=paste("your.profile$`", your.orcid, "`$`orcid-bio`", sep="")))
+eid<-rbind(bio$`external-identifiers`$`external-identifier`$`external-id-common-name.value`, bio$`external-identifiers`$`external-identifier`$`external-id-reference.value`)
+```
+
+
+#`r profile$name`
+##`r profile$affiliation`
+
+`r ifelse(ncol(eid)>1,paste(eid[1,2], ": ",eid[2,2]), "")` 
+
+`r eid[1,1]`: `r eid[2,1]`
+
+Google Scholar ID:  `r your.id`
+
+ORCID: `r your.orcid`
+
+## Publications
+```{r citation_plot, echo=FALSE}
+
+citations<-get_citation_history(your.id)
+p<-ggplot(data=citations, aes(x=year, y=cites))+geom_bar(stat="identity", fill="steelblue")+theme_classic()+ylab("New Citations (n)")+xlab("Year")
+p
+```
+
+Metric| N
+---------|----------------------------------
+|Total publications | `r get_num_articles(your.id)`
+|Total Citations | `r profile$total_cites`|
+|H-index | `r profile$h_index`|
+
+### Peer Reviewed Journal Articles
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+*Note a maximum of 100 papers are returned*
