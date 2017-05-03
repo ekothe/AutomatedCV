@@ -3,7 +3,8 @@ title: "This CV was automagically generated"
 csl: apa-cv.csl
 graphics: yes
 output:
-  html_document: default
+  html_document: 
+    keep_md: yes
   pdf_document:
     latex_engine: lualatex
   word_document:
