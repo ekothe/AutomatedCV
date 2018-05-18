@@ -1,7 +1,9 @@
 library(scholar)
 library(ggplot2)
 
-your.id<-"SIeJ24UAAAAJ" # This is your google scholar ID
+
+#https://scholar.google.com.au/citations?user=CvhanwUAAAAJ&hl=en <- google scholar profile the ID is between "user=" and "&"
+your.id<-"CvhanwUAAAAJ" # This is your google scholar ID
 
 profile<-get_profile(your.id)
 pubs<-get_publications(your.id, cstart = 0, pagesize = 100, flush = FALSE)
